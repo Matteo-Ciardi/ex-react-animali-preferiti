@@ -10,39 +10,74 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone@7.10.3/babel.min.js" crossorigin></script>
     <script type="text/babel">
+        function Modal({
+            title,
+            content,
+            show = false,
+            onClose = () => { },
+            onConfirm = () => { }
+        }) {
+
+            const { useState } = React;
+            const [input, setInput] = useState('');
+
+            return show && ReactDOM.createPortal(
+                <div className="modal-container">
+                    <div className="modal">
+                        <h2>{title}</h2>
+                        <p>{content ? content({ value: input, onChange: setInput }) : null}</p>
+                        <div>
+                            <button onClick={() => {
+                                onConfirm(input);
+                                setInput('');
+                            }}>Conferma</button>
+                            <button onClick={onClose}>Annulla</button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )
+        }
         const ReactApp = () => {
             const { useState } = React;
             const [animals, setAnimals] = useState([]);
-            const animalsChoices = [
-                "Cane",
-                "Gatto",
-                "Pappagallo",
-                "Cavallo",
-                "Panda"
-            ];
+            const [modal, setShowModal] = useState(false);
 
-            function chooseAnimal() {
-                const random = Math.floor(Math.random() * animalsChoices.length);
-                const randomAnimal = animalsChoices[random];
-                
-                setAnimals([...animals, randomAnimal]);
-            }
+            const addCustomAnimal = ({ value, onChange }) => (
+                <input
+                    type="text"
+                    placeholder="Inserisci il nome dell'animale..."
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    autoFocus
+                />
+            );
 
             return (
                 <main>
-                    <button onClick={chooseAnimal}>Agiungi un animale</button>
-                    <details>
-                        <summary>
-                            Animali
-                        </summary>
-                        <ul>
-                            {animals.map(animal => {
-                                return (
-                                    <li>{animal}</li>
-                                )
-                            })}
-                        </ul>
-                    </details>
+                    <>
+                        <button onClick={() => setShowModal(true)}>Agiungi un animale</button>
+                        <details>
+                            <summary>
+                                Animali
+                            </summary>
+                            <ul>
+                                {animals.map((animal, index) => (
+                                    <li key={index}>{animal}</li>
+                                ))}
+                            </ul>
+                        </details>
+                        <Modal
+                            title="Aggiungi animale"
+                            show={modal}
+                            content={addCustomAnimal}
+                            onClose={() => setShowModal(false)}
+                            onConfirm={(animalName) => {
+                                setAnimals([...animals, animalName]);
+                                setShowModal(false);
+                            }}
+                        />
+                    </>
                 </main>
             )
         }
